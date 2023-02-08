@@ -30,7 +30,7 @@ def change_coord(coord, r, theta, phi):
 
 
 def writeXYZ(fileName: str, atomLabels: List[str], atomCoords: NDArray[np.float_],
-             comment: str = "", append: bool = True
+             comment: str = "", append: bool = False
              ) -> None:
     with open(fileName, 'a' if append else 'w') as fl:
         fl.write(str(len(atomCoords)) + "\n")
@@ -39,7 +39,39 @@ def writeXYZ(fileName: str, atomLabels: List[str], atomCoords: NDArray[np.float_
                      for atom, coords in zip(atomLabels, atomCoords) ))
         fl.write("\n")
 
+
+def test_coords(atomLabels):
+    coo0 = init_coord()
+    r0 = 1.44
+    theta0 = 0
+    phi0 = 0
+    writeXYZ('test_coords.xyz', atomLabels, coo0)
+
+    r = np.linspace(r0, 10, 100)
+    theta = [theta0]*len(r)
+    phi = [phi0]*len(r)
+    for x in zip(r, theta, phi):
+        coo = change_coord(coo0, *x)
+        writeXYZ('test_coords.xyz', atomLabels, coo, append=True)
+
+    theta = np.linspace(0, np.pi, 100)
+    r = [r0]*len(theta)
+    phi = [phi0]*len(theta)
+    for x in zip(r, theta, phi):
+        coo = change_coord(coo0, *x)
+        writeXYZ('test_coords.xyz', atomLabels, coo, append=True)
+
+    phi = np.linspace(0, 2*np.pi, 100)
+    r = [r0]*len(phi)
+    theta = [theta0]*len(phi)
+    for x in zip(r, theta, phi):
+        coo = change_coord(coo0, *x)
+        writeXYZ('test_coords.xyz', atomLabels, coo, append=True)
+
+
 if __name__ == "__main__":
-    new_coord = change_coord(coord = init_coord(), r = 1.44, theta = 120/2 , phi = 90)
-    writeXYZ(fileName = 'cf2i2_1.xyz', atomLabels = ['C', 'F', 'F', 'I', 'I'], atomCoords = new_coord)
+    atomLabels = ['C', 'F', 'F', 'I', 'I']
+    test_coords(atomLabels)
+    # new_coord = change_coord(coord = init_coord(), r = 1.44, theta = 120/2 , phi = 90)
+    # writeXYZ(fileName = 'cf2i2_1.xyz', atomLabels = ['C', 'F', 'F', 'I', 'I'], atomCoords = new_coord)
     
