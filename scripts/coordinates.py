@@ -4,11 +4,15 @@ import numpy as np
 from numpy.linalg import norm
 from numpy import radians as rad
 from scipy.spatial.transform import Rotation as R
+import random
+
+
 def init_coord():
+    global FCF, ICI, CF, CI
     FCF = 109.5  #degrees
     ICI = 112.5  #degrees
-    CF = 1.34
-    CI = 2.15
+    CF = 1.34 #angstrom
+    CI = 2.15 #angstrom
     atoms = ['C', 'F', 'F', 'I', 'I']
     coord = [[0,0,0],
             [-CF* np.sin(rad(FCF/2)), 0, -CF*np.cos(rad(FCF/2))],
@@ -22,10 +26,23 @@ def change_coord(coord, r, theta, phi):
     zaxis = np.abs((vec1 + vec2)/norm(vec1 + vec2))
     xaxis = np.abs((vec1 - vec2)/norm(vec1 - vec2))
     yaxis = np.abs(np.cross(vec1, vec2)/norm(np.cross(vec1, vec2)))
-    coord[4] = [0, -r*np.sin(rad(theta)), r*np.cos(rad(theta))]
-    rot_vec = zaxis * rad(phi)
-    rotation = R.from_rotvec(rot_vec)
-    coord[4] = rotation.apply(coord[4])
+    
+    if theta == 0 and phi == 0 :
+        theta = rad(ICI/2)
+        coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
+    elif theta != 0 and phi == 0 :
+        coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
+    elif phi != 0 and theta == 0:
+        rot_vec = zaxis * phi
+        rotation = R.from_rotvec(rot_vec)
+        theta = rad(ICI/2)
+        coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
+        coord[4] = rotation.apply(coord[4])
+    else:
+        rot_vec = zaxis * phi
+        rotation = R.from_rotvec(rot_vec)
+        coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
+        coord[4] = rotation.apply(coord[4])
     return coord
 
 
@@ -42,13 +59,13 @@ def writeXYZ(fileName: str, atomLabels: List[str], atomCoords: NDArray[np.float_
 
 def test_coords(atomLabels):
     coo0 = init_coord()
-    r0 = 1.44
+    r0 = 2.15   #  distance of carbon iodine
     theta0 = 0
     phi0 = 0
     writeXYZ('test_coords.xyz', atomLabels, coo0)
 
     r = np.linspace(r0, 10, 100)
-    theta = [theta0]*len(r)
+    theta = [theta0]*len(r)    # theta and phi is given in radians
     phi = [phi0]*len(r)
     for x in zip(r, theta, phi):
         coo = change_coord(coo0, *x)
@@ -67,8 +84,9 @@ def test_coords(atomLabels):
     for x in zip(r, theta, phi):
         coo = change_coord(coo0, *x)
         writeXYZ('test_coords.xyz', atomLabels, coo, append=True)
-
-
+        
+            
+            
 if __name__ == "__main__":
     atomLabels = ['C', 'F', 'F', 'I', 'I']
     test_coords(atomLabels)
