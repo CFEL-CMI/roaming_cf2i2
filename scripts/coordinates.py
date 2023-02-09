@@ -21,11 +21,16 @@ def init_coord():
             [0, -CI*np.sin(rad(ICI/2)), CI*np.cos(rad(ICI/2))]]
     return np.array(coord)
     
-def change_coord(coord, r, theta, phi):
+def init_axes():
+    coord = init_coord()
     vec1, vec2 = np.array(coord[1]), np.array(coord[2])
     zaxis = np.abs((vec1 + vec2)/norm(vec1 + vec2))
     xaxis = np.abs((vec1 - vec2)/norm(vec1 - vec2))
     yaxis = np.abs(np.cross(vec1, vec2)/norm(np.cross(vec1, vec2)))
+    return(xaxis, yaxis, zaxis)
+    
+def change_coord(coord, r, theta, phi):
+    x, y, z = init_axes()
     
     if theta == 0 and phi == 0 :
         theta = rad(ICI/2)
@@ -33,16 +38,28 @@ def change_coord(coord, r, theta, phi):
     elif theta != 0 and phi == 0 :
         coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
     elif phi != 0 and theta == 0:
-        rot_vec = zaxis * phi
+        rot_vec = z * phi
         rotation = R.from_rotvec(rot_vec)
         theta = rad(ICI/2)
         coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
         coord[4] = rotation.apply(coord[4])
     else:
-        rot_vec = zaxis * phi
+        rot_vec = z * phi
         rotation = R.from_rotvec(rot_vec)
         coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
         coord[4] = rotation.apply(coord[4])
+    return coord
+    
+def rotate_frag(coord, r, angle, axis):
+    x, y, z = init_axes()
+    axes = {'x': x, 'y':y, 'z':z}
+    assert r > CI
+    
+    theta = rad(ICI/2)
+    coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
+    rot_vec = axes[axis] * angle
+    rotation = R.from_rotvec(rot_vec)
+    coord[0 : 4] = rotation.apply(coord[ 0 : 4 ])
     return coord
 
 
@@ -63,6 +80,7 @@ def test_coords(atomLabels):
     theta0 = 0
     phi0 = 0
     writeXYZ('test_coords.xyz', atomLabels, coo0)
+    writeXYZ('test_Frag_coords.xyz', atomLabels, coo0)
 
     r = np.linspace(r0, 10, 100)
     theta = [theta0]*len(r)    # theta and phi is given in radians
@@ -84,6 +102,14 @@ def test_coords(atomLabels):
     for x in zip(r, theta, phi):
         coo = change_coord(coo0, *x)
         writeXYZ('test_coords.xyz', atomLabels, coo, append=True)
+        
+    rot_angle = np.random.random(300)
+    rot_angle *= np.pi
+    r = [3]*len(rot_angle)
+    axes = [random.choice(['x', 'y', 'z'])]*len(rot_angle)
+    for x in zip(r, rot_angle, axes):
+        coo = rotate_frag(coo0, *x)
+        writeXYZ('test_Frag_coords.xyz', atomLabels, coo, append=True)
         
             
             
