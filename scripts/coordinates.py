@@ -5,7 +5,9 @@ from numpy.linalg import norm
 from numpy import radians as rad
 from scipy.spatial.transform import Rotation as R
 import random
+import itertools
 
+atomLabels = ['C', 'F', 'F', 'I', 'I']
 
 def init_coord():
     global FCF, ICI, CF, CI
@@ -19,16 +21,18 @@ def init_coord():
             [CF*np.sin(rad(FCF/2)), 0, -CF*np.cos(rad(FCF/2))],
             [0, CI*np.sin(rad(ICI/2)), CI*np.cos(rad(ICI/2))],
             [0, -CI*np.sin(rad(ICI/2)), CI*np.cos(rad(ICI/2))]]
-    return np.array(coord)
-    
+    return (CF, CI, FCF, ICI), np.array(coord)
+ 
+
 def init_axes():
-    coord = init_coord()
+    _, coord = init_coord()
     vec1, vec2 = np.array(coord[1]), np.array(coord[2])
     zaxis = np.abs((vec1 + vec2)/norm(vec1 + vec2))
     xaxis = np.abs((vec1 - vec2)/norm(vec1 - vec2))
     yaxis = np.abs(np.cross(vec1, vec2)/norm(np.cross(vec1, vec2)))
     return(xaxis, yaxis, zaxis)
-    
+ 
+
 def change_coord(coord, r, theta, phi):
     x, y, z = init_axes()
     
@@ -49,7 +53,8 @@ def change_coord(coord, r, theta, phi):
         coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
         coord[4] = rotation.apply(coord[4])
     return coord
-    
+
+
 def rotate_frag(coord, r, angle, axis):
     x, y, z = init_axes()
     axes = {'x': x, 'y':y, 'z':z}
@@ -75,7 +80,7 @@ def writeXYZ(fileName: str, atomLabels: List[str], atomCoords: NDArray[np.float_
 
 
 def test_coords(atomLabels):
-    coo0 = init_coord()
+    _, coo0 = init_coord()
     r0 = 2.15   #  distance of carbon iodine
     theta0 = 0
     phi0 = 0
@@ -111,11 +116,26 @@ def test_coords(atomLabels):
         coo = rotate_frag(coo0, *x)
         writeXYZ('test_Frag_coords.xyz', atomLabels, coo, append=True)
         
+
+def test_coords2(atomLabels):
+    (rCF, rCI, aFCF, aICI), coo0 = init_coord()
+    r0 = rCI * 2
+    writeXYZ('test_coords2.xyz', atomLabels, coo0)
+
+    theta = np.linspace(0.001, np.pi-0.001, 10)
+    phi = np.linspace(0, 2*np.pi, 100)
+    theta_phi = [elem for elem in itertools.product(theta, phi)]
+    for (theta, phi) in theta_phi:
+        print(theta, phi)
+        coo = change_coord(coo0, r0, theta, phi)
+        writeXYZ('test_coords2.xyz', atomLabels, coo, append=True)
+
             
             
 if __name__ == "__main__":
     atomLabels = ['C', 'F', 'F', 'I', 'I']
-    test_coords(atomLabels)
+    # test_coords(atomLabels)
+    test_coords2(atomLabels)
     # new_coord = change_coord(coord = init_coord(), r = 1.44, theta = 120/2 , phi = 90)
     # writeXYZ(fileName = 'cf2i2_1.xyz', atomLabels = ['C', 'F', 'F', 'I', 'I'], atomCoords = new_coord)
     
