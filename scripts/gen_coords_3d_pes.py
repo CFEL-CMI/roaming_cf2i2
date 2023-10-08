@@ -6,7 +6,7 @@ import itertools
 if __name__ == "__main__":
 
     # grid_filename = "cf2i2_3d_grid1.xyz"
-    grid_filename = "cf2i2_3d_grid2.xyz"
+    grid_filename = "cf2i2_3d_grid3.xyz"
 
     (rCF_ref, rCI_ref, aFCF_ref, aICI_ref), xyz_ref = init_coord()
     r = rCI_ref

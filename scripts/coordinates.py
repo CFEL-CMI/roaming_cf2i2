@@ -36,12 +36,12 @@ def init_axes():
 def change_coord(coord, r, theta, phi):
     x, y, z = init_axes()
     
-    if theta == 0 and phi == 0 :
+    if theta == rad(ICI/2) and phi == 0 :
         theta = rad(ICI/2)
         coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
-    elif theta != 0 and phi == 0 :
+    elif theta != rad(ICI/2) and phi == 0 :
         coord[4] = [0, -r*np.sin(theta), r*np.cos(theta)]
-    elif phi != 0 and theta == 0:
+    elif phi != 0 and theta == rad(ICI/2):
         rot_vec = z * phi
         rotation = R.from_rotvec(rot_vec)
         theta = rad(ICI/2)
